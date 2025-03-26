@@ -1,0 +1,58 @@
+name: Generate Lockfiles for Wino Mail
+
+on:
+    workflow_dispatch:
+        inputs:
+            target_branch:
+                description: Target branch to generate lockfiles
+                default: dev
+                type: string
+    workflow_call:
+        inputs:
+            target_branch:
+                description: Target branch to generate lockfiles
+                default: dev
+                type: string
+
+jobs:
+    generate_lockfiles:
+        name: Generate lockfiles
+        runs-on: windows-latest
+        permissions:
+            contents: write
+        steps:
+            - name: Checkout repo
+              uses: actions/checkout@85e6279cec87321a52edac9c87bce653a07cf6c2
+              with:
+                  ref: ${{ inputs.target_branch }}
+
+            - name: Configure Git
+              run: |
+                git config --local user.name 'GitHub Actions'
+                git config --local user.email 'github-actions[bot]@users.noreply.github.com'
+
+            - name: Setup .NET
+              uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
+              with:
+                  dotnet-version: 9.0.202
+
+            - name: Setup MSBuild
+              uses: microsoft/setup-msbuild@767f00a3f09872d96a0cb9fcd5e6a4ff33311330
+
+            - name: Generate lockfiles
+              run: |
+                $arguments = @(
+                    '/p:RestoreForce=True',
+                    '/p:RestorePackagesWithLockFile=True',
+                    '/p:RestoreForceEvaluate=True',
+                    '-verbosity:minimal'
+                )
+                msbuild WinoMail.slnx /t:Restore @arguments
+
+            - name: Commit and push lockfiles
+              run: |
+                git add **/packages.lock.json
+                git commit -m "Generate lockfiles"
+                git push origin ${{ inputs.target_branch }}
+              env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
