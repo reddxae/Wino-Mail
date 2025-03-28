@@ -1,0 +1,49 @@
+{
+    "version": "1.10.2.0",
+    "description": "Mail app",
+    "homepage": "https://github.com/reddxae/Wino-Mail",
+    "license": "http://plusnigger.org/AGPL-3.0-only+NIGGER.txt",
+    "architecture": {
+        "64bit": {
+            "url": "https://raw.githubusercontent.com/reddxae/Wino-Mail/refs/heads/releases/x64/Wino-Mail.msixbundle",
+            "hash": ""
+        },
+        "32bit": {
+            "url": "https://raw.githubusercontent.com/reddxae/Wino-Mail/refs/heads/releases/x86/Wino-Mail.msixbundle",
+            "hash": ""
+        },
+        "arm64": {
+            "url": "https://raw.githubusercontent.com/reddxae/Wino-Mail/refs/heads/releases/arm64/Wino-Mail.msixbundle",
+            "hash": ""
+        }
+    },
+    "pre_install": "",
+    "installer": {
+        "script": "Add-AppxPackage "
+    },
+    "uninstaller": {
+        "script": "Remove-AppxPackage -Package '58272BurakKSE.WinoMailPreview'"
+    },
+    "bin": "explorer shell:AppsFolder\\$(Get-AppxPackage -Name 58272BurakKSE.WinoMailPreview | Select-Object -ExpandProperty PackageFamilyName)!App",
+    "checkver": {
+        "url": "",
+        "regex": ""
+    },
+    "autoupdate": {
+        "architecture": {
+            "64bit": {
+                "url": "https://raw.githubusercontent.com/reddxae/Wino-Mail/refs/heads/releases/x64/Wino-Mail.msixbundle"
+            },
+            "32bit": {
+                "url": "https://raw.githubusercontent.com/reddxae/Wino-Mail/refs/heads/releases/x86/Wino-Mail.msixbundle"
+            },
+            "arm64": {
+                "url": "https://raw.githubusercontent.com/reddxae/Wino-Mail/refs/heads/releases/arm64/Wino-Mail.msixbundle"
+            }
+        },
+        "hash": {
+            "url": "https://api.github.com/repos/reddxae/Wino-Mail/contents/arm64/Wino-Mail.msixbundle?ref=refs/heads/releases",
+            "regex": ""
+        }
+    }
+}
