@@ -1,82 +1,82 @@
 name: Build Wino Mail
 
 on:
-    workflow_dispatch:
-        inputs:
-            target_branch:
-                description: Target branch to build
-                default: dev
-                type: string
-    workflow_call:
-        inputs:
-            target_branch:
-                description: Target branch to build
-                default: dev
-                type: string
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: Target branch to build
+        default: dev
+        type: string
+  workflow_call:
+    inputs:
+      target_branch:
+        description: Target branch to build
+        default: dev
+        type: string
 
 jobs:
-    build:
-        name: Build app
-        runs-on: windows-latest
-        strategy:
-            matrix:
-                platform: [x86, x64, arm64]
-        steps:
-            - name: Checkout repo
-              uses: actions/checkout@85e6279cec87321a52edac9c87bce653a07cf6c2
-              with:
-                  ref: ${{ inputs.target_branch }}
+  build:
+    name: Build app
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        platform: [x86, x64, arm64]
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@85e6279cec87321a52edac9c87bce653a07cf6c2
+        with:
+          ref: ${{ inputs.target_branch }}
 
-            - name: Import certificate
-              run: |
-                  $CertificatePath = Join-Path -Path $env:RUNNER_TEMP -ChildPath "Certificate.pfx"
-                  [IO.File]::WriteAllBytes($CertificatePath, [Convert]::FromBase64String("${{ secrets.CERTIFICATE_FILE }}"))
+      - name: Import certificate
+        run: |
+          $CertificatePath = Join-Path -Path $env:RUNNER_TEMP -ChildPath "Certificate.pfx"
+          [IO.File]::WriteAllBytes($CertificatePath, [Convert]::FromBase64String("${{ secrets.CERTIFICATE_FILE }}"))
 
-                  $password = ConvertTo-SecureString -String "${{ secrets.CERTIFICATE_PASSWORD }}" -Force -AsPlainText
-                  Import-PfxCertificate -FilePath $CertificatePath -CertStoreLocation Cert:/CurrentUser/My -Password $password
+          $password = ConvertTo-SecureString -String "${{ secrets.CERTIFICATE_PASSWORD }}" -Force -AsPlainText
+          Import-PfxCertificate -FilePath $CertificatePath -CertStoreLocation Cert:/CurrentUser/My -Password $password
 
-                  Remove-Item -Path $CertificatePath -Force
+          Remove-Item -Path $CertificatePath -Force
 
-            - name: Setup .NET
-              uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
-              with:
-                  dotnet-version: 9.0.202
-                  cache: true
-                  cache-dependency-path: "**/packages.lock.json"
+      - name: Setup .NET
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
+        with:
+          dotnet-version: ${{ vars.DOTNET_VERSION }}
+          cache: true
+          cache-dependency-path: "**/packages.lock.json"
 
-            - name: Setup MSBuild
-              uses: microsoft/setup-msbuild@767f00a3f09872d96a0cb9fcd5e6a4ff33311330
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@767f00a3f09872d96a0cb9fcd5e6a4ff33311330
 
-            - name: Restore solution
-              run: |
-                  $arguments = @(
-                      '/p:Configuration=Release',
-                      '/p:Platform=${{ matrix.platform }}',
-                      '/p:RestoreLockedMode=True',
-                      '/p:RestoreForceEvaluate=True',
-                      '-verbosity:minimal'
-                  )
-                  msbuild WinoMail.slnx /t:Restore @arguments
+      - name: Restore solution
+        run: |
+          $arguments = @(
+              '/p:Configuration=Release',
+              '/p:Platform=${{ matrix.platform }}',
+              '/p:RestoreLockedMode=True',
+              '/p:RestoreForceEvaluate=True',
+              '-verbosity:minimal'
+          )
+          msbuild WinoMail.slnx /t:Restore @arguments
 
-            - name: Build solution
-              run: |
-                  $arguments = @(
-                      '/p:Configuration=Release',
-                      '/p:Platform=${{ matrix.platform }}',
-                      '/p:AppxBundlePlatforms=${{ matrix.platform }}',
-                      '/p:UapAppxPackageBuildMode=SideloadOnly',
-                      '/p:AppxPackageSigningEnabled=True',
-                      '/p:GenerateTemporaryStoreCertificate=False',
-                      '/p:PackageCertificateThumbprint=${{ secrets.CERTIFICATE_THUMBPRINT }}',
-                      '/p:AppxBundleNameForOutput=WinoMail-${{ matrix.platform }}',
-                      '-verbosity:minimal'
-                  )
-                  msbuild WinoMail.slnx @arguments
+      - name: Build solution
+        run: |
+          $arguments = @(
+              '/p:Configuration=Release',
+              '/p:Platform=${{ matrix.platform }}',
+              '/p:AppxBundlePlatforms=${{ matrix.platform }}',
+              '/p:UapAppxPackageBuildMode=SideloadOnly',
+              '/p:AppxPackageSigningEnabled=True',
+              '/p:GenerateTemporaryStoreCertificate=False',
+              '/p:PackageCertificateThumbprint=${{ secrets.CERTIFICATE_THUMBPRINT }}',
+              '/p:AppxBundleNameForOutput=Wino-Mail-${{ matrix.platform }}',
+              '-verbosity:minimal'
+          )
+          msbuild WinoMail.slnx @arguments
 
-            - name: Upload build artifacts
-              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-              with:
-                  name: WinoMail-${{ matrix.platform }}-${{ github.sha }}
-                  path: |
-                    WinoMail.Packaging/AppPackages/**/WinoMail-${{ matrix.platform }}.msixbundle
-                    WinoMail.Packaging/AppPackages/**/Dependencies/${{ matrix.platform }}/**/*
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: Wino-Mail-${{ matrix.platform }}-${{ github.sha }}
+          path: |
+            WinoMail.Packaging/AppPackages/**/Wino-Mail-${{ matrix.platform }}.msixbundle
+            WinoMail.Packaging/AppPackages/**/Dependencies/${{ matrix.platform }}/**/*

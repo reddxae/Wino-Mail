@@ -1,42 +1,39 @@
 {
-    "$schema": "https://raw.githubusercontent.com/ScoopInstaller/scoop/master/schema.json",
-    "version": "1.10.2.0",
-    "description": "Mail app",
-    "homepage": "https://github.com/reddxae/Wino-Mail",
-    "license": "http://plusnigger.org/AGPL-3.0-only+NIGGER.txt",
-    "architecture": {
-        "64bit": {
-            "url": "https://github.com/reddxae/Wino-Mail/releases/download/v1.10.2/Wino-Mail-x64.msixbundle",
-            "hash": ""
-        },
-        "32bit": {
-            "url": "https://github.com/reddxae/Wino-Mail/releases/download/v1.10.2/Wino-Mail-x86.msixbundle",
-            "hash": ""
-        },
-        "arm64": {
-            "url": "https://github.com/reddxae/Wino-Mail/releases/download/v1.10.2/Wino-Mail-arm64.msixbundle",
-            "hash": ""
-        }
+  "$schema": "https://raw.githubusercontent.com/ScoopInstaller/scoop/master/schema.json",
+  "version": "1.10.2.0",
+  "description": "Mail app",
+  "homepage": "https://github.com/reddxae/Wino-Mail",
+  "license": "http://plusnigger.org/AGPL-3.0-only+NIGGER.txt",
+  "architecture": {
+    "64bit": {
+      "url": "https://github.com/reddxae/Wino-Mail/releases/download/v1.10.2/Wino-Mail-x64.msixbundle"
     },
-    "installer": {
-        "script": "Add-AppxPackage $fname"
+    "32bit": {
+      "url": "https://github.com/reddxae/Wino-Mail/releases/download/v1.10.2/Wino-Mail-x86.msixbundle"
     },
-    "uninstaller": {
-        "script": "Remove-AppxPackage -Package '58272BurakKSE.WinoMailPreview'"
-    },
-    "bin": "explorer shell:AppsFolder\\$(Get-AppxPackage -Name 58272BurakKSE.WinoMailPreview | Select-Object -ExpandProperty PackageFamilyName)!App",
-    "checkver": "github",
-    "autoupdate": {
-        "architecture": {
-            "64bit": {
-                "url": "https://github.com/reddxae/Wino-Mail/releases/latest/download/Wino-Mail-x64.msixbundle"
-            },
-            "32bit": {
-                "url": "https://github.com/reddxae/Wino-Mail/releases/latest/download/Wino-Mail-x86.msixbundle"
-            },
-            "arm64": {
-                "url": "https://github.com/reddxae/Wino-Mail/releases/latest/download/Wino-Mail-arm64.msixbundle"
-            }
-        }
+    "arm64": {
+      "url": "https://github.com/reddxae/Wino-Mail/releases/download/v1.10.2/Wino-Mail-arm64.msixbundle"
     }
+  },
+  "installer": {
+    "script": "Add-AppxPackage -Package $fname"
+  },
+  "uninstaller": {
+    "script": "Remove-AppxPackage -Package '58272BurakKSE.WinoMailPreview'"
+  },
+  "bin": "explorer shell:AppsFolder\\$(Get-AppxPackage -Name 58272BurakKSE.WinoMailPreview | Select-Object -ExpandProperty PackageFamilyName)!App",
+  "checkver": "github",
+  "autoupdate": {
+    "architecture": {
+      "64bit": {
+        "url": "https://github.com/reddxae/Wino-Mail/releases/latest/download/Wino-Mail-x64.msixbundle"
+      },
+      "32bit": {
+        "url": "https://github.com/reddxae/Wino-Mail/releases/latest/download/Wino-Mail-x86.msixbundle"
+      },
+      "arm64": {
+        "url": "https://github.com/reddxae/Wino-Mail/releases/latest/download/Wino-Mail-arm64.msixbundle"
+      }
+    }
+  }
 }
