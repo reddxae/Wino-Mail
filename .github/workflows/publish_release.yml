@@ -12,17 +12,17 @@ on:
 
 env:
   target_branch: ${{ inputs.target_branch || 'dev' }}
-
 jobs:
-  fetch_tags:
+  fetch_info:
     name: Fetch release tags
     runs-on: ubuntu-latest
     outputs:
-      latest_release: ${{ steps.tags.outputs.latest_release }}
-      latest_release_parent: ${{ steps.tags.outputs.latest_release_parent }}
+      latest_release_tag: ${{ steps.info.outputs.latest_release_tag }}
+      latest_release_tag_parent: ${{ steps.info.outputs.latest_release_tag_parent }}
+      parent_repo_url: ${{ steps.info.outputs.parent_repo_url }}
     steps:
-      - name: Collect info about the latest releases
-        id: tags
+      - name: Collect info about the current repository
+        id: info
         uses: actions/github-script@v7
         with:
           script: |
@@ -49,12 +49,13 @@ jobs:
               repo: parent.name,
             });
 
-            core.setOutput("latest_release", latestRelease.tag_name);
-            core.setOutput("latest_release_parent", latestReleaseParent.tag_name);
+            core.setOutput("latest_release_tag", latestRelease.tag_name);
+            core.setOutput("latest_release_tag_parent", latestReleaseParent.tag_name);
+            core.setOutput("parent_repo_url", parent.html_url);
   rebase:
     name: Rebase target branch
-    needs: fetch_tags
-    if: needs.fetch_tags.outputs.latest_release != needs.fetch_tags.outputs.latest_release_parent
+    needs: fetch_info
+    if: needs.fetch_info.outputs.latest_release_tag != needs.fetch_info.outputs.latest_release_tag_parent
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -69,8 +70,9 @@ jobs:
           git config --local user.email 'github-actions[bot]@users.noreply.github.com'
       - name: Rebase taget branch on upstream branch
         run: |
-          git fetch upstream
-          git rebase upstream/${{ needs.fetch_tags.outputs.latest_release_parent }}
+          git remote add upstream ${{ needs.fetch_info.outputs.parent_repo_url }}.git
+          git fetch upstream --tags
+          git rebase ${{ needs.fetch_info.outputs.latest_release_tag_parent }}
       - name: Push changes
         run: git push origin ${{ env.target_branch }} --force
         env:
@@ -85,7 +87,8 @@ jobs:
 
   publish:
     name: Publish app
-    needs: [build, fetch_tags]
+    needs: [build, fetch_info]
+
     permissions:
       contents: write
     runs-on: ubuntu-latest
@@ -97,7 +100,7 @@ jobs:
       - name: Publish release
         uses: softprops/action-gh-release@ab50eebb6488051c6788d97fa95232267c6a4e23
         with:
-          tag_name: ${{ needs.fetch_tags.outputs.latest_release }}
+          tag_name: ${{ needs.fetch_info.outputs.latest_release_tag_parent }}
           files: |
             **/*.appx
             **/*.msixbundle
