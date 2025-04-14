@@ -18,7 +18,8 @@ jobs:
     name: Fetch release tags
     runs-on: ubuntu-latest
     outputs:
-      tags: ${{ steps.tags.outputs.result }}
+      latest_release: ${{ steps.tags.outputs.latest_release }}
+      latest_release_parent: ${{ steps.tags.outputs.latest_release_parent }}
     steps:
       - name: Collect info about the latest releases
         id: tags
@@ -48,15 +49,12 @@ jobs:
               repo: parent.name,
             });
 
-            return {
-              latest_release: latestRelease.tag_name,
-              latest_release_parent: latestReleaseParent.tag_name,
-            };
-
+            core.setOutput("latest_release", latestRelease.tag_name);
+            core.setOutput("latest_release_parent", latestReleaseParent.tag_name);
   rebase:
     name: Rebase target branch
     needs: fetch_tags
-    if: needs.fetch_tags.outputs.tags.latest_release != needs.fetch_tags.outputs.tags.latest_release_parent
+    if: needs.fetch_tags.outputs.latest_release != needs.fetch_tags.outputs.latest_release_parent
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -72,7 +70,7 @@ jobs:
       - name: Rebase taget branch on upstream branch
         run: |
           git fetch upstream
-          git rebase upstream/${{ needs.fetch_tags.outputs.tags.latest_release_parent }}
+          git rebase upstream/${{ needs.fetch_tags.outputs.latest_release_parent }}
       - name: Push changes
         run: git push origin ${{ env.target_branch }} --force
         env:
@@ -108,7 +106,7 @@ jobs:
       - name: Publish release
         uses: softprops/action-gh-release@ab50eebb6488051c6788d97fa95232267c6a4e23
         with:
-          tag_name: ${{ needs.fetch_tags.outputs.tags.latest_release }}
+          tag_name: ${{ needs.fetch_tags.outputs.latest_release }}
           files: |
             **/*.appx
             **/*.msixbundle
