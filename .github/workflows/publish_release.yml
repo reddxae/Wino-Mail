@@ -76,15 +76,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  update-lockfiles:
-    name: Update lockfiles
-    needs: rebase
-    permissions:
-      contents: write
-    uses: ./.github/workflows/generate_lockfiles.yml
-    with:
-      target_branch: ${{ inputs.target_branch || 'dev' }}
-
   build:
     name: Build app
     needs: update-lockfiles
