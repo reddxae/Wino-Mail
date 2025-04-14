@@ -8,57 +8,37 @@ on:
         default: dev
         type: string
   schedule:
-    - cron: "0 0 * * 1" # Every Monday at midnight UTC
+    - cron: "0 0 * * 6" # Every Saturday at midnight UTC
 
 env:
   target_branch: ${{ inputs.target_branch || 'dev' }}
+
 jobs:
-  fetch_info:
-    name: Fetch release tags
+  get_parent_repo:
+    name: Get parent repo
     runs-on: ubuntu-latest
     outputs:
-      latest_release_tag: ${{ steps.info.outputs.latest_release_tag }}
-      latest_release_tag_parent: ${{ steps.info.outputs.latest_release_tag_parent }}
-      parent_repo_url: ${{ steps.info.outputs.parent_repo_url }}
+      parent_repo_url: ${{ steps.info.outputs.result }}
     steps:
-      - name: Collect info about the current repository
+      - name: Get parent repo URL
         id: info
         uses: actions/github-script@v7
         with:
           script: |
-            let latestRelease = { tag_name: "" };
-            try {
-              const { data } = await github.rest.repos.getLatestRelease({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-              });
-              latestRelease = data;
-            } catch (error) {
-              if (error.status !== 404) {
-                throw error;
-              }
-            }
-
             const { data: { parent } } = await github.rest.repos.get({
               owner: context.repo.owner,
               repo: context.repo.repo,
             });
+            return parent.html_url
 
-            const { data: latestReleaseParent } = await github.rest.repos.getLatestRelease({
-              owner: parent.owner.login,
-              repo: parent.name,
-            });
-
-            core.setOutput("latest_release_tag", latestRelease.tag_name);
-            core.setOutput("latest_release_tag_parent", latestReleaseParent.tag_name);
-            core.setOutput("parent_repo_url", parent.html_url);
-  rebase:
+  rebase_branch:
     name: Rebase target branch
-    needs: fetch_info
-    if: needs.fetch_info.outputs.latest_release_tag != needs.fetch_info.outputs.latest_release_tag_parent
+    needs: get_parent_repo
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      is_up-to-date: ${{ steps.fetch.outputs.is_up-to-date }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@85e6279cec87321a52edac9c87bce653a07cf6c2
@@ -68,11 +48,24 @@ jobs:
         run: |
           git config --local user.name 'GitHub Actions'
           git config --local user.email 'github-actions[bot]@users.noreply.github.com'
-      - name: Rebase taget branch on upstream branch
+      - name: Fetch latest changes
+        id: fetch
         run: |
-          git remote add upstream ${{ needs.fetch_info.outputs.parent_repo_url }}.git
-          git fetch upstream --tags
-          git rebase ${{ needs.fetch_info.outputs.latest_release_tag_parent }}
+          git remote add upstream ${{ needs.get_parent_repo.outputs.parent_repo_url }}.git
+          git fetch upstream
+          if git diff --name-only HEAD..upstream/main | \
+             grep -v '^[^/]\+\.md$' | \
+             grep -v 'packages\.lock\.json$' | \
+             grep -v '^\.github/' | \
+             grep -v '^Wino\.Calendar[^/]*/' | \
+             grep -q .; then
+            is_up-to-date=1
+          else
+            is_up-to-date=0
+          fi
+          echo "is_up-to-date=$is_up-to-date" >> $GITHUB_OUTPUT
+      - name: Rebase branch
+        run: git rebase upstream
       - name: Push changes
         run: git push origin ${{ env.target_branch }} --force
         env:
@@ -80,19 +73,24 @@ jobs:
 
   build:
     name: Build app
-    needs: update-lockfiles
+    needs: rebase_branch
+    if: needs.rebase_branch.outputs.is_up-to-date == '0'
     uses: ./.github/workflows/build.yml
     with:
       target_branch: ${{ inputs.target_branch || 'dev' }}
 
   publish:
     name: Publish app
-    needs: [build, fetch_info]
-
+    needs: build
+    runs-on: ubuntu-latest
     permissions:
       contents: write
-    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.date.outputs.date }}
     steps:
+      - name: Get current date
+        id: date
+        run: echo "date=$(date +'%Y.%m.%d')" >> $GITHUB_OUTPUT
       - name: Download latest artifacts
         uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e
         with:
@@ -100,7 +98,30 @@ jobs:
       - name: Publish release
         uses: softprops/action-gh-release@ab50eebb6488051c6788d97fa95232267c6a4e23
         with:
-          tag_name: ${{ needs.fetch_info.outputs.latest_release_tag_parent }}
+          tag_name: v${{ steps.date.outputs.date }}
           files: |
             **/*.appx
             **/*.msixbundle
+
+  update_manifest:
+    name: Update manifest
+    needs: publish
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@85e6279cec87321a52edac9c87bce653a07cf6c2
+      - name: Configure Git
+        run: |
+          git config --local user.name 'GitHub Actions'
+          git config --local user.email 'github-actions[bot]@users.noreply.github.com'
+      - name: Update manifest
+        run: |
+
+      - name: Commit changes
+        run: git commit -am "Update manifest"
+      - name: Push changes
+        run: git push origin
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
