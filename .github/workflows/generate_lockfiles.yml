@@ -4,13 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       target_branch:
-        description: Target branch to generate lockfiles
+        description: Target branch to generate lockfiles for
         default: dev
         type: string
   workflow_call:
     inputs:
       target_branch:
-        description: Target branch to generate lockfiles
+        description: Target branch to generate lockfiles for
         default: dev
         type: string
 

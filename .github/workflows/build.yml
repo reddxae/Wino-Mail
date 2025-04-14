@@ -4,13 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       target_branch:
-        description: Target branch to build
+        description: Target branch to build from
         default: dev
         type: string
   workflow_call:
     inputs:
       target_branch:
-        description: Target branch to build
+        description: Target branch to build from
         default: dev
         type: string
 

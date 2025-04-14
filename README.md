@@ -1,6 +1,6 @@
 **If you have found this casually then it is not for you.**
 
-## How to install:
+## How to install
 
 > [!WARNING]
 > Be aware of the security implications of importing a certificate: this opens you up to man-in-the-middle attacks by anyone with the private version of it. Also, this certificate won't be revoked if it's compromised 'case it is self-signed. Don't forget to delete it if you decide to stop using the app.
