@@ -7,7 +7,7 @@
 
 1. Install dependencies from the latest release if needed
 2. Uninstall original Wino Mail if you have it
-3. Download [the public certificate](https://raw.githubusercontent.com/reddxae/Wino-Mail/refs/heads/releases/PublicCertificate.cer)
+3. Download [the public certificate](https://raw.githubusercontent.com/reddxae/Wino-Mail/refs/heads/master/PublicCertificate.cer)
 4. Run in PowerShell as an Administrator:
    ```powershell
    Import-Certificate -FilePath "PublicCertificate.cer" -CertStoreLocation "Cert:\LocalMachine\TrustedPeople"
