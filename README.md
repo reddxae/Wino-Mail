@@ -22,4 +22,4 @@
     scoop install wino-mail
     ```
 
-![halal](https://github.com/user-attachments/assets/5eab27ac-57cc-4cc5-8b4f-4ca525dfc4a9)
+[![halal](https://github.com/user-attachments/assets/5eab27ac-57cc-4cc5-8b4f-4ca525dfc4a9)](https://github.com/user-attachments/assets/ca341a8d-6538-4767-899f-e7e3707512ca)
