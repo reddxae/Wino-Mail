@@ -55,7 +55,6 @@ jobs:
           git fetch upstream
           if git diff --name-only HEAD..upstream/main | \
              grep -v '^[^/]\+\.md$' | \
-             grep -v 'packages\.lock\.json$' | \
              grep -v '^\.github/' | \
              grep -v '^Wino\.Calendar[^/]*/' | \
              grep -q .; then

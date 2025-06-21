@@ -50,8 +50,6 @@ jobs:
           $arguments = @(
               '/p:Configuration=Release',
               '/p:Platform=${{ matrix.platform }}',
-              '/p:RestoreLockedMode=True',
-              '/p:RestoreForceEvaluate=True',
               '-verbosity:minimal'
           )
           msbuild WinoMail.slnx /t:Restore @arguments
