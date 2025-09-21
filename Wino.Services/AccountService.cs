@@ -545,13 +545,6 @@ public class AccountService : BaseDatabaseService, IAccountService
         if (isMicrosoftProvider)
             account.Preferences.IsFocusedInboxEnabled = true;
 
-        // Setup default signature.
-        var defaultSignature = await _signatureService.CreateDefaultSignatureAsync(account.Id);
-
-        account.Preferences.SignatureIdForNewMessages = defaultSignature.Id;
-        account.Preferences.SignatureIdForFollowingMessages = defaultSignature.Id;
-        account.Preferences.IsSignatureEnabled = true;
-
         await Connection.InsertAsync(preferences);
 
         if (customServerInformation != null)
